@@ -1,0 +1,10 @@
+DOMAIN = "utec"
+CONF_CLIENT_ID = "client_id"
+CONF_CLIENT_SECRET = "client_secret"
+CONF_USERNAME = "username"
+CONF_PASSWORD = "password"
+CONF_SCOPE = "scope"
+CONF_TOKEN = "access_token"
+SCAN_INTERVAL = 30  # seconds
+API_URL = "https://api.u-tec.com/action"
+OAUTH_URL = "https://oauth.u-tec.com/token"

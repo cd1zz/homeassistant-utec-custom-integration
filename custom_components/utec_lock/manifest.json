@@ -1,0 +1,11 @@
+{
+  "domain": "utec_lock",
+  "name": "Utec Lock",
+  "config_flow": true,
+  "documentation": "https://github.com/cd1zz/homeassistant-utec-custom-integration",
+  "issue_tracker": "https://github.com/cd1zz/homeassistant-utec-custom-integration/issues",
+  "requirements": ["requests>=2.25.0"],
+  "codeowners": ["@cd1zz"],
+  "iot_class": "cloud_polling",
+  "version": "0.1.0"
+}

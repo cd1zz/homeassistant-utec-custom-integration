@@ -1,0 +1,6 @@
+
+{
+  "name": "Utec Lock Integration",
+  "render_readme": true,
+  "domains": ["lock", "sensor"]
+}
