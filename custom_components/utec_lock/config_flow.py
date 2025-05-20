@@ -31,9 +31,7 @@ def fetch_token(client_id: str, client_secret: str, code: str) -> dict[str, Any]
     payload = {
         "grant_type": "authorization_code",
         "client_id": client_id,
-        "client_secret": client_secret,
-        "code": code,
-        "redirect_uri": "http://localhost:9501"
+        "code": code
     }
     try:
         response = requests.post(token_url, data=payload)
