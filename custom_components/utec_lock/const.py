@@ -1,10 +1,18 @@
-DOMAIN = "utec"
+"""Constants for the Utec Lock integration."""
+from homeassistant.const import Platform
+
+# Domain - must match what's in manifest.json
+DOMAIN = "utec_lock"
+
+# Configuration parameters
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
-CONF_SCOPE = "scope"
-CONF_TOKEN = "access_token"
-SCAN_INTERVAL = 30  # seconds
+
+# API endpoints
 API_URL = "https://api.u-tec.com/action"
-OAUTH_URL = "https://oauth.u-tec.com/token"
+
+# Default values
+DEFAULT_SCAN_INTERVAL = 30  # seconds
+
+# Platforms
+PLATFORMS = [Platform.LOCK, Platform.SENSOR]
