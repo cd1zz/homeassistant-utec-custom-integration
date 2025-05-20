@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     hass.data.setdefault(DOMAIN, {})
-    
+
     conf = config[DOMAIN]
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -47,55 +47,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             },
         )
     )
-    
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utec Lock from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    
-    # Create API instance
+
     api = UtecLockApi(
         client_id=entry.data[CONF_CLIENT_ID],
         client_secret=entry.data[CONF_CLIENT_SECRET],
+        access_token=entry.data.get("access_token"),
+        refresh_token=entry.data.get("refresh_token"),
     )
-    
-    # Authenticate with the API
-    try:
-        await hass.async_add_executor_job(api.authenticate)
-    except Exception as err:
-        _LOGGER.error("Failed to authenticate with Utec API: %s", err)
+
+    if not api.access_token:
+        _LOGGER.error("Missing access token in config entry")
         return False
-    
-    # Create coordinator
+
     coordinator = UtecLockDataUpdateCoordinator(hass, api)
-    
-    # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
-    
-    # Store API and coordinator in hass data
+
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
         "coordinator": coordinator,
     }
-    
-    # Set up all platforms
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Clean up resources
         if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
-            # Close API session
             api = hass.data[DOMAIN][entry.entry_id]["api"]
             if hasattr(api, "session") and api.session:
                 await hass.async_add_executor_job(api.session.close)
-                
             hass.data[DOMAIN].pop(entry.entry_id)
-    
+
     return unload_ok
