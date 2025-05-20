@@ -63,7 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if not api.access_token:
-        _LOGGER.error("Missing access token in config entry")
+        _LOGGER.warning("No access token in config entry, attempting to authenticate")
+    
+    # Authenticate with the API
+    authenticated = await hass.async_add_executor_job(api.authenticate)
+    if not authenticated:
+        _LOGGER.error("Failed to authenticate with Utec API")
         return False
 
     coordinator = UtecLockDataUpdateCoordinator(hass, api)

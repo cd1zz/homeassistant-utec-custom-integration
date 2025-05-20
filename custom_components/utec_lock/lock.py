@@ -1,6 +1,6 @@
 import logging
 from homeassistant.components.lock import LockEntity
-from .const import DOMAIN, API_URL, SCAN_INTERVAL
+from .const import DOMAIN, API_URL, DEFAULT_SCAN_INTERVAL
 import async_timeout
 
 _LOGGER = logging.getLogger(__name__)
@@ -9,21 +9,26 @@ class UtecLock(LockEntity):
     """Representation of a U-tec Ultraloq smart lock."""
 
     def __init__(self, device_id, name, hass):
+        """Initialize the lock."""
         self.device_id = device_id
         self._name = name
         self._is_locked = None
         self.hass = hass
+        _LOGGER.debug("Lock entity for %s initialized", self._name)
 
     @property
     def name(self):
+        """Return the name of the lock."""
         return self._name
 
     @property
     def unique_id(self):
+        """Return a unique ID for this entity."""
         return self.device_id
 
     @property
     def is_locked(self):
+        """Return true if the lock is locked."""
         return self._is_locked
 
     async def async_update(self):
@@ -101,7 +106,6 @@ class UtecLock(LockEntity):
 
     @property
     def supported_features(self):
+        """Flag supported features."""
         # No additional features (e.g. OPEN) beyond lock/unlock
         return 0
-
-_LOGGER.debug("Lock entity for %s initialized", name)
