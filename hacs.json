@@ -1,5 +1,4 @@
 {
   "name": "Utec Lock Integration",
-  "render_readme": true,
-  "domain": "utec_lock"
+  "render_readme": true
 }
