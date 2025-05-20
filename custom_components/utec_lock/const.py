@@ -8,6 +8,10 @@ DOMAIN = "utec_lock"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 
+# OAuth parameters
+OAUTH_SCOPE = "openapi"
+OAUTH_REDIRECT_URI = "http://localhost:9501" 
+
 # API endpoints
 API_URL = "https://api.u-tec.com/action"
 
