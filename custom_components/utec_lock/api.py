@@ -2,75 +2,45 @@
 import logging
 import uuid
 from typing import Any, Dict, List
-
 import requests
-
-from .const import API_URL, OAUTH_SCOPE, OAUTH_REDIRECT_URI
+from .const import API_URL
 
 _LOGGER = logging.getLogger(__name__)
 
 class UtecLockApi:
     """API client for Utec Lock integration."""
 
-    def __init__(self, client_id: str, client_secret: str):
+    def __init__(self, client_id: str, client_secret: str, access_token: str = None, refresh_token: str = None):
         """Initialize the API client."""
         self.client_id = client_id
         self.client_secret = client_secret
+        self.access_token = access_token
+        self.refresh_token = refresh_token
         self.session = requests.Session()
-        self.access_token = None
-        self.devices = []
-        
-        # API endpoint
-        self.api_url = API_URL
-
-    def authenticate(self) -> bool:
-        """Authenticate with the API."""
-        # OAuth authentication request
-        headers = {
-            "Content-Type": "application/json",
-        }
-        
-        auth_data = {
-            "header": {
-                "namespace": "Uhome.Auth",
-                "name": "Request",
-                "messageId": str(uuid.uuid4()),
-                "payloadVersion": "1"
-            },
-            "payload": {
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "scope": OAUTH_SCOPE,
-                "redirect_uri": OAUTH_REDIRECT_URI
-            }
-        }
-        
-        try:
-            _LOGGER.debug("Authenticating with Utec API")
-            response = self.session.post(
-                self.api_url,
-                headers=headers,
-                json=auth_data,
-            )
-            
-            if response.status_code != 200:
-                _LOGGER.error("Authentication failed: %s", response.text)
-                return False
-                
-            result = response.json()
-            self.access_token = result.get("payload", {}).get("access_token")
-            
-            if not self.access_token:
-                _LOGGER.error("No access token received in response: %s", result)
-                return False
-                
-            # Add the token to session headers for future requests
+        if access_token:
             self.session.headers.update({"Authorization": f"Bearer {self.access_token}"})
-            _LOGGER.debug("Successfully authenticated with Utec API")
+        self.devices = []
+
+    def refresh_access_token(self) -> bool:
+        """Refresh the access token using the refresh token."""
+        token_url = "https://oauth.u-tec.com/token"
+        data = {
+            "grant_type": "refresh_token",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "refresh_token": self.refresh_token,
+        }
+        try:
+            response = self.session.post(token_url, data=data)
+            response.raise_for_status()
+            result = response.json()
+            self.access_token = result.get("access_token")
+            self.refresh_token = result.get("refresh_token", self.refresh_token)
+            self.session.headers.update({"Authorization": f"Bearer {self.access_token}"})
+            _LOGGER.debug("Token refreshed successfully")
             return True
-        
         except Exception as e:
-            _LOGGER.error("Exception during authentication: %s", e)
+            _LOGGER.error("Failed to refresh access token: %s", e)
             return False
 
     def get_devices(self) -> List[Dict[str, Any]]:
@@ -84,20 +54,20 @@ class UtecLockApi:
             },
             "payload": {}
         }
-        
+
         try:
             _LOGGER.debug("Getting devices from Utec API")
-            response = self.session.post(self.api_url, json=device_request)
-            
+            response = self.session.post(API_URL, json=device_request)
+
             if response.status_code != 200:
                 _LOGGER.error("Failed to get devices: %s", response.text)
                 return []
-                
+
             result = response.json()
             self.devices = result.get("payload", {}).get("devices", [])
             _LOGGER.debug("Found %s devices", len(self.devices))
             return self.devices
-        
+
         except Exception as e:
             _LOGGER.error("Exception while getting devices: %s", e)
             return []
@@ -115,17 +85,17 @@ class UtecLockApi:
                 "device_id": device_id
             }
         }
-        
+
         try:
             _LOGGER.debug("Getting status for device %s", device_id)
-            response = self.session.post(self.api_url, json=status_request)
-            
+            response = self.session.post(API_URL, json=status_request)
+
             if response.status_code != 200:
                 _LOGGER.error("Failed to get device status: %s", response.text)
                 return {}
-                
+
             return response.json().get("payload", {})
-        
+
         except Exception as e:
             _LOGGER.error("Exception while getting device status: %s", e)
             return {}
@@ -134,14 +104,14 @@ class UtecLockApi:
         """Get all devices with their status."""
         devices = self.get_devices()
         devices_with_status = {}
-        
+
         for device in devices:
             device_id = device.get("id")
             if device_id:
                 status = self.get_device_status(device_id)
                 device["status"] = status
                 devices_with_status[device_id] = device
-                
+
         return devices_with_status
 
     def lock(self, device_id: str) -> bool:
@@ -157,17 +127,17 @@ class UtecLockApi:
                 "device_id": device_id
             }
         }
-        
+
         try:
             _LOGGER.debug("Locking device %s", device_id)
-            response = self.session.post(self.api_url, json=lock_request)
-            
+            response = self.session.post(API_URL, json=lock_request)
+
             if response.status_code != 200:
                 _LOGGER.error("Failed to lock device: %s", response.text)
                 return False
-                
+
             return True
-        
+
         except Exception as e:
             _LOGGER.error("Exception while locking device: %s", e)
             return False
@@ -185,17 +155,17 @@ class UtecLockApi:
                 "device_id": device_id
             }
         }
-        
+
         try:
             _LOGGER.debug("Unlocking device %s", device_id)
-            response = self.session.post(self.api_url, json=unlock_request)
-            
+            response = self.session.post(API_URL, json=unlock_request)
+
             if response.status_code != 200:
                 _LOGGER.error("Failed to unlock device: %s", response.text)
                 return False
-                
+
             return True
-        
+
         except Exception as e:
             _LOGGER.error("Exception while unlocking device: %s", e)
             return False
